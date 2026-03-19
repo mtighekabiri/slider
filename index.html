@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand vs Influencer Advertising</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --brand-color: #1a3a5c;
+    --influencer-color: #c24d2c;
+    --bg: #0e1117;
+    --card-bg: #181c24;
+    --text: #e8e8e8;
+    --muted: #8a8f98;
+    --accent: #3b82f6;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 48px 24px 24px;
+  }
+  .header h1 {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--brand-color), var(--influencer-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── THEORY PANEL ── */
+  .theory-section {
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 24px;
+  }
+  .theory-toggle {
+    background: var(--card-bg);
+    border: 1px solid #2a2e38;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .theory-toggle summary {
+    padding: 16px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .theory-toggle summary::before {
+    content: '▸';
+    transition: transform 0.2s;
+  }
+  .theory-toggle[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .theory-content {
+    padding: 0 24px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) {
+    .theory-content { grid-template-columns: 1fr; }
+  }
+  .theory-card {
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #2a2e38;
+  }
+  .theory-card.brand-theory {
+    background: linear-gradient(135deg, rgba(26,58,92,0.15), transparent);
+    border-color: rgba(26,58,92,0.4);
+  }
+  .theory-card.influencer-theory {
+    background: linear-gradient(135deg, rgba(194,77,44,0.15), transparent);
+    border-color: rgba(194,77,44,0.4);
+  }
+  .theory-card h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .theory-card.brand-theory h3 { color: #5b9bd5; }
+  .theory-card.influencer-theory h3 { color: #e07850; }
+  .theory-card p {
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+  .theory-card .trait {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin: 4px 4px 0 0;
+  }
+  .brand-theory .trait {
+    background: rgba(26,58,92,0.3);
+    color: #5b9bd5;
+  }
+  .influencer-theory .trait {
+    background: rgba(194,77,44,0.3);
+    color: #e07850;
+  }
+
+  .theory-summary {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 16px;
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 10px;
+  }
+  .theory-summary p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .theory-summary strong { color: var(--text); }
+
+  /* ── SPECTRUM / SLIDER AREA ── */
+  .spectrum-section {
+    max-width: 1100px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  .spectrum-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .spectrum-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .spectrum-label.brand { color: #5b9bd5; }
+  .spectrum-label.influencer { color: #e07850; }
+  .spectrum-label.center { color: var(--muted); font-weight: 400; font-size: 0.7rem; }
+
+  /* Slider track */
+  .slider-container {
+    position: relative;
+    height: 6px;
+    background: linear-gradient(90deg, var(--brand-color), #444, var(--influencer-color));
+    border-radius: 3px;
+    margin-bottom: 24px;
+  }
+  .slider-container input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 30px;
+    background: transparent;
+    position: absolute;
+    top: -12px;
+    left: 0;
+    cursor: pointer;
+  }
+  .slider-container input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border: 3px solid var(--accent);
+  }
+  .slider-container input[type=range]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border: 3px solid var(--accent);
+  }
+
+  /* ── MEDIA GALLERY ── */
+  .gallery-wrapper {
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    margin-bottom: 32px;
+  }
+  .media-gallery {
+    display: flex;
+    gap: 16px;
+    padding: 8px 0;
+    transition: transform 0.4s ease;
+  }
+  .media-card {
+    flex: 0 0 220px;
+    background: var(--card-bg);
+    border: 1px solid #2a2e38;
+    border-radius: 12px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity 0.5s, transform 0.5s;
+    position: relative;
+  }
+  .media-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .media-card.highlighted {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(59,130,246,0.2);
+  }
+  .media-card .media-container {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .media-card img,
+  .media-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .media-card .card-info {
+    padding: 12px;
+  }
+  .media-card .card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .media-card .card-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .media-card .position-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+
+  /* Amplifiers */
+  .amplifiers-badge {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px 12px;
+  }
+  .amplifier-tag {
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(59,130,246,0.12);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+  .empty-state h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .empty-state p {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .empty-state code {
+    background: rgba(59,130,246,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  /* ── AMPLIFIERS SECTION ── */
+  .amplifiers-section {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+  .amplifiers-section h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .amplifiers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .amplifier-card {
+    background: var(--card-bg);
+    border: 1px solid #2a2e38;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .amplifier-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .amplifier-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
+  .amplifier-card .amp-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .amplifier-card .amp-desc {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── EFFECT VIZ ── */
+  .effect-viz {
+    max-width: 1100px;
+    margin: 0 auto 48px;
+    padding: 0 24px;
+  }
+  .effect-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  @media (max-width: 600px) {
+    .effect-bars { grid-template-columns: 1fr; }
+  }
+  .effect-col h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .effect-col.brand-col h3 { color: #5b9bd5; }
+  .effect-col.influencer-col h3 { color: #e07850; }
+  .effect-bar {
+    margin-bottom: 10px;
+  }
+  .effect-bar .bar-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .effect-bar .bar-track {
+    height: 6px;
+    background: #1e222c;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .effect-bar .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease;
+  }
+  .brand-col .bar-fill { background: linear-gradient(90deg, #1a3a5c, #5b9bd5); }
+  .influencer-col .bar-fill { background: linear-gradient(90deg, #c24d2c, #e07850); }
+
+  .effect-depth-label {
+    text-align: center;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .brand-col .effect-depth-label {
+    background: rgba(26,58,92,0.15);
+    color: #5b9bd5;
+  }
+  .influencer-col .effect-depth-label {
+    background: rgba(194,77,44,0.15);
+    color: #e07850;
+  }
+
+  /* ── CONFIG PANEL ── */
+  .config-panel {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+  }
+  .config-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid #2a2e38;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+  }
+  .config-btn:hover { border-color: var(--accent); color: var(--text); }
+  .config-dropdown {
+    display: none;
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid #2a2e38;
+    border-radius: 12px;
+    padding: 16px;
+    width: 280px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .config-dropdown.open { display: block; }
+  .config-dropdown h4 {
+    font-size: 0.78rem;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .config-dropdown label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .config-dropdown input,
+  .config-dropdown textarea {
+    width: 100%;
+    padding: 6px 10px;
+    background: #12151c;
+    border: 1px solid #2a2e38;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.75rem;
+    font-family: inherit;
+    margin-bottom: 10px;
+  }
+  .config-dropdown textarea { min-height: 60px; resize: vertical; }
+  .config-dropdown button.add-btn {
+    width: 100%;
+    padding: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .config-dropdown button.add-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<!-- Config gear -->
+<div class="config-panel">
+  <button class="config-btn" onclick="toggleConfig()" title="Add media item">+</button>
+  <div class="config-dropdown" id="configDropdown">
+    <h4>Add Media to Spectrum</h4>
+    <label>Media file (from /media folder)</label>
+    <input type="text" id="cfgFile" placeholder="e.g. 03-nike-runner.mp4">
+    <label>Label</label>
+    <input type="text" id="cfgLabel" placeholder="e.g. Nike Brand Spot">
+    <label>Description</label>
+    <input type="text" id="cfgDesc" placeholder="e.g. High production brand ad">
+    <label>Position (0 = pure brand, 100 = pure influencer)</label>
+    <input type="number" id="cfgPos" min="0" max="100" value="50">
+    <label>Amplifiers (comma-separated)</label>
+    <input type="text" id="cfgAmps" placeholder="e.g. comedy, relevance">
+    <button class="add-btn" onclick="addMediaItem()">Add to Spectrum</button>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <h1>Brand-Led vs Influencer-Led Advertising</h1>
+  <p>Exploring the spectrum between shallow-wide brand effects and narrow-deep influencer effects</p>
+</div>
+
+<!-- Theory -->
+<div class="theory-section">
+  <details class="theory-toggle" open>
+    <summary>The Theory: Attention vs Attribution</summary>
+    <div class="theory-content">
+      <div class="theory-card brand-theory">
+        <h3>Brand-Led Advertising</h3>
+        <p>Higher production quality with obvious brand cues and assets. People recognise these as adverts quickly, reducing raw attention time. However, the strong brand signals mean those who do engage can easily attribute the ad back to the brand &mdash; driving higher recall, consideration, and purchase intent across a broad audience.</p>
+        <div style="margin-top: 10px;">
+          <span class="trait">Shallow but wide effects</span>
+          <span class="trait">High recall</span>
+          <span class="trait">Strong brand cues</span>
+          <span class="trait">Higher production</span>
+          <span class="trait">Broad reach</span>
+        </div>
+      </div>
+      <div class="theory-card influencer-theory">
+        <h3>Influencer-Led Advertising</h3>
+        <p>Often lower production quality, blending into organic content. People watch longer because it doesn't immediately register as an ad, generating strong attention metrics. But the lack of brand assets means fewer viewers connect the content back to the brand &mdash; creating deep engagement for a minority but weaker overall brand outcomes.</p>
+        <div style="margin-top: 10px;">
+          <span class="trait">Narrow but deep effects</span>
+          <span class="trait">High attention</span>
+          <span class="trait">Low brand cues</span>
+          <span class="trait">Organic feel</span>
+          <span class="trait">Niche impact</span>
+        </div>
+      </div>
+      <div class="theory-summary">
+        <p><strong>The trade-off:</strong> Brand ads sacrifice attention for attribution. Influencer ads sacrifice attribution for attention. The slider below maps real examples across this spectrum. Even within each type, <strong>amplifiers</strong> like comedy, context, and relevance can boost effectiveness — these are independent levers that enhance either approach.</p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<!-- Spectrum slider -->
+<div class="spectrum-section">
+  <div class="spectrum-labels">
+    <span class="spectrum-label brand">Brand-Led</span>
+    <span class="spectrum-label center">Hybrid</span>
+    <span class="spectrum-label influencer">Influencer-Led</span>
+  </div>
+  <div class="slider-container">
+    <input type="range" id="spectrumSlider" min="0" max="100" value="50">
+  </div>
+</div>
+
+<!-- Media gallery -->
+<div class="spectrum-section">
+  <div class="gallery-wrapper">
+    <div class="media-gallery" id="mediaGallery">
+      <!-- Cards inserted by JS -->
+    </div>
+    <div class="empty-state" id="emptyState">
+      <h3>Add your ad examples</h3>
+      <p>
+        Drop images or videos into the <code>/media</code> folder with numbered filenames to set their order (e.g. <code>01-brand-spot.jpg</code>, <code>02-influencer-ad.mp4</code>).
+        Then use the <strong>+</strong> button to register them on the spectrum, or edit the <code>mediaItems</code> array in the HTML.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Effect visualisation -->
+<div class="effect-viz">
+  <h2 style="font-size:1rem; font-weight:700; margin-bottom:4px;">Effect Profile at Current Position</h2>
+  <p style="font-size:0.75rem; color:var(--muted); margin-bottom:16px;">How outcomes shift across the brand–influencer spectrum</p>
+  <div class="effect-bars">
+    <div class="effect-col brand-col">
+      <h3>Brand-Led Outcomes</h3>
+      <div class="effect-bar"><div class="bar-label">Attention / Dwell Time</div><div class="bar-track"><div class="bar-fill" id="brandAttention" style="width:35%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Ad Recall</div><div class="bar-track"><div class="bar-fill" id="brandRecall" style="width:80%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Brand Consideration</div><div class="bar-track"><div class="bar-fill" id="brandConsideration" style="width:75%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Purchase Intent</div><div class="bar-track"><div class="bar-fill" id="brandPurchase" style="width:65%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Breadth of Effect</div><div class="bar-track"><div class="bar-fill" id="brandBreadth" style="width:85%"></div></div></div>
+      <div class="effect-depth-label">Shallow &amp; Wide</div>
+    </div>
+    <div class="effect-col influencer-col">
+      <h3>Influencer-Led Outcomes</h3>
+      <div class="effect-bar"><div class="bar-label">Attention / Dwell Time</div><div class="bar-track"><div class="bar-fill" id="infAttention" style="width:85%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Ad Recall</div><div class="bar-track"><div class="bar-fill" id="infRecall" style="width:35%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Brand Consideration</div><div class="bar-track"><div class="bar-fill" id="infConsideration" style="width:30%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Purchase Intent</div><div class="bar-track"><div class="bar-fill" id="infPurchase" style="width:55%"></div></div></div>
+      <div class="effect-bar"><div class="bar-label">Depth of Engagement</div><div class="bar-track"><div class="bar-fill" id="infDepth" style="width:80%"></div></div></div>
+      <div class="effect-depth-label">Narrow &amp; Deep</div>
+    </div>
+  </div>
+</div>
+
+<!-- Amplifiers -->
+<div class="amplifiers-section">
+  <h2>Amplifiers &mdash; Independent Effectiveness Levers</h2>
+  <p style="font-size:0.78rem; color:var(--muted); margin-bottom:16px;">Regardless of where an ad sits on the spectrum, these factors can independently boost its effectiveness.</p>
+  <div class="amplifiers-grid">
+    <div class="amplifier-card"><div class="icon">&#9786;</div><div class="amp-name">Comedy</div><div class="amp-desc">Humour increases attention and sharing regardless of format</div></div>
+    <div class="amplifier-card"><div class="icon">&#9881;</div><div class="amp-name">Context</div><div class="amp-desc">Placement in the right environment at the right moment</div></div>
+    <div class="amplifier-card"><div class="icon">&#9733;</div><div class="amp-name">Relevance</div><div class="amp-desc">Personal relevance to the viewer's needs or interests</div></div>
+    <div class="amplifier-card"><div class="icon">&#9829;</div><div class="amp-name">Emotion</div><div class="amp-desc">Emotional resonance deepens engagement and memory</div></div>
+    <div class="amplifier-card"><div class="icon">&#9775;</div><div class="amp-name">Novelty</div><div class="amp-desc">Unexpected or fresh creative cuts through habituation</div></div>
+    <div class="amplifier-card"><div class="icon">&#9992;</div><div class="amp-name">Frequency</div><div class="amp-desc">Repeated exposure reinforces memory structures over time</div></div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  //  MEDIA ITEMS CONFIG
+  //  Add your ads here. Position: 0 = brand, 100 = influencer
+  //  Number in filename determines left-to-right order.
+  //  Supported: .jpg .jpeg .png .gif .webp .mp4 .webm .mov
+  // ═══════════════════════════════════════════════════════
+  let mediaItems = [
+    // EXAMPLE entries — replace/extend with your own:
+    // {
+    //   file: "media/01-coca-cola-christmas.jpg",
+    //   label: "Coca-Cola Christmas",
+    //   desc: "Classic high-production brand campaign",
+    //   position: 5,          // 0-100 (brand to influencer)
+    //   amplifiers: ["emotion", "frequency"]
+    // },
+    // {
+    //   file: "media/02-nike-just-do-it.mp4",
+    //   label: "Nike — Just Do It",
+    //   desc: "Brand-heavy with celebrity endorsement",
+    //   position: 20,
+    //   amplifiers: ["emotion", "relevance"]
+    // },
+    // {
+    //   file: "media/05-tiktoker-unboxing.mp4",
+    //   label: "TikTok Unboxing",
+    //   desc: "Pure influencer content, minimal brand cues",
+    //   position: 90,
+    //   amplifiers: ["novelty"]
+    // },
+  ];
+
+  // Sort by position (left-to-right = brand-to-influencer)
+  function sortMedia() {
+    mediaItems.sort((a, b) => a.position - b.position);
+  }
+
+  // ── Render gallery ──
+  function renderGallery() {
+    const gallery = document.getElementById('mediaGallery');
+    const empty = document.getElementById('emptyState');
+    gallery.innerHTML = '';
+
+    if (mediaItems.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    sortMedia();
+    mediaItems.forEach((item, i) => {
+      const card = document.createElement('div');
+      card.className = 'media-card';
+      card.dataset.position = item.position;
+      card.style.transitionDelay = `${i * 0.08}s`;
+
+      const isVideo = /\.(mp4|webm|mov)$/i.test(item.file);
+      const dotColor = positionColor(item.position);
+
+      card.innerHTML = `
+        <div class="position-dot" style="background:${dotColor}"></div>
+        <div class="media-container">
+          ${isVideo
+            ? `<video src="${item.file}" muted loop playsinline preload="metadata"></video>`
+            : `<img src="${item.file}" alt="${item.label}" loading="lazy">`}
+        </div>
+        <div class="card-info">
+          <div class="card-label" style="color:${dotColor}">${item.label}</div>
+          <div class="card-desc">${item.desc}</div>
+        </div>
+        ${item.amplifiers && item.amplifiers.length
+          ? `<div class="amplifiers-badge">${item.amplifiers.map(a => `<span class="amplifier-tag">${a}</span>`).join('')}</div>`
+          : ''}
+      `;
+      gallery.appendChild(card);
+
+      // Play video on hover
+      if (isVideo) {
+        const vid = card.querySelector('video');
+        card.addEventListener('mouseenter', () => vid.play());
+        card.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+      }
+    });
+
+    updateVisibility();
+  }
+
+  function positionColor(pos) {
+    // Blend brand blue → neutral → influencer orange
+    const r = Math.round(26 + (194 - 26) * pos / 100);
+    const g = Math.round(58 + (77 - 58) * pos / 100);
+    const b = Math.round(92 + (44 - 92) * pos / 100);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // ── Slider controls visibility + effects ──
+  const slider = document.getElementById('spectrumSlider');
+  slider.addEventListener('input', () => {
+    updateVisibility();
+    updateEffectBars();
+  });
+
+  function updateVisibility() {
+    const val = parseInt(slider.value);
+    const range = 30; // cards within ±30 of slider are visible
+    const cards = document.querySelectorAll('.media-card');
+
+    cards.forEach(card => {
+      const pos = parseInt(card.dataset.position);
+      const distance = Math.abs(pos - val);
+      if (distance <= range) {
+        card.classList.add('visible');
+        card.classList.toggle('highlighted', distance <= 8);
+      } else {
+        card.classList.remove('visible', 'highlighted');
+      }
+    });
+
+    // Scroll gallery to center on slider position
+    const gallery = document.getElementById('mediaGallery');
+    if (cards.length > 0) {
+      const pct = val / 100;
+      const maxScroll = gallery.scrollWidth - gallery.parentElement.clientWidth;
+      gallery.style.transform = `translateX(-${pct * maxScroll}px)`;
+    }
+  }
+
+  function updateEffectBars() {
+    const v = parseInt(slider.value);
+    const brand = 1 - v / 100;  // 1 at left, 0 at right
+    const inf = v / 100;         // 0 at left, 1 at right
+
+    // Brand outcomes
+    document.getElementById('brandAttention').style.width = `${25 + brand * 20}%`;
+    document.getElementById('brandRecall').style.width = `${30 + brand * 55}%`;
+    document.getElementById('brandConsideration').style.width = `${25 + brand * 55}%`;
+    document.getElementById('brandPurchase').style.width = `${25 + brand * 45}%`;
+    document.getElementById('brandBreadth').style.width = `${30 + brand * 55}%`;
+
+    // Influencer outcomes
+    document.getElementById('infAttention').style.width = `${30 + inf * 55}%`;
+    document.getElementById('infRecall').style.width = `${20 + inf * 25}%`;
+    document.getElementById('infConsideration').style.width = `${15 + inf * 25}%`;
+    document.getElementById('infPurchase').style.width = `${25 + inf * 40}%`;
+    document.getElementById('infDepth').style.width = `${25 + inf * 55}%`;
+  }
+
+  // ── Config panel ──
+  function toggleConfig() {
+    document.getElementById('configDropdown').classList.toggle('open');
+  }
+
+  function addMediaItem() {
+    const file = document.getElementById('cfgFile').value.trim();
+    const label = document.getElementById('cfgLabel').value.trim();
+    const desc = document.getElementById('cfgDesc').value.trim();
+    const pos = parseInt(document.getElementById('cfgPos').value) || 50;
+    const amps = document.getElementById('cfgAmps').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    if (!file) return;
+
+    const path = file.startsWith('media/') ? file : `media/${file}`;
+    mediaItems.push({ file: path, label: label || file, desc: desc || '', position: pos, amplifiers: amps });
+
+    // Save to localStorage
+    localStorage.setItem('adSpectrumMedia', JSON.stringify(mediaItems));
+
+    // Reset form
+    document.getElementById('cfgFile').value = '';
+    document.getElementById('cfgLabel').value = '';
+    document.getElementById('cfgDesc').value = '';
+    document.getElementById('cfgPos').value = 50;
+    document.getElementById('cfgAmps').value = '';
+
+    renderGallery();
+    toggleConfig();
+  }
+
+  // ── Init ──
+  (function init() {
+    // Load saved items from localStorage
+    const saved = localStorage.getItem('adSpectrumMedia');
+    if (saved) {
+      try { mediaItems = JSON.parse(saved); } catch(e) {}
+    }
+    renderGallery();
+    updateEffectBars();
+  })();
+</script>
+
+</body>
+</html>
