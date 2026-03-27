@@ -3,818 +3,979 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brand vs Influencer Advertising</title>
+<title>Eye Tracking Heatmap Generator</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --brand-color: #1a3a5c;
-    --influencer-color: #c24d2c;
-    --bg: #0e1117;
-    --card-bg: #181c24;
-    --text: #e8e8e8;
-    --muted: #8a8f98;
-    --accent: #3b82f6;
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-hover: #242837;
+    --border: #2e3347;
+    --text: #e4e6f0;
+    --text-muted: #8b8fa8;
+    --accent: #6c5ce7;
+    --accent-hover: #7f71ed;
+    --danger: #e74c5c;
+    --danger-hover: #f05e6e;
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.3);
   }
 
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: var(--bg);
     color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
   }
 
-  /* ── HEADER ── */
-  .header {
-    text-align: center;
-    padding: 48px 24px 24px;
-  }
-  .header h1 {
-    font-size: clamp(1.6rem, 4vw, 2.6rem);
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--brand-color), var(--influencer-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
-  }
-  .header p {
-    color: var(--muted);
-    font-size: 0.95rem;
-    max-width: 600px;
-    margin: 0 auto;
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    z-index: 100;
   }
 
-  /* ── THEORY PANEL ── */
-  .theory-section {
-    max-width: 1100px;
-    margin: 32px auto;
-    padding: 0 24px;
+  .logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
   }
-  .theory-toggle {
-    background: var(--card-bg);
-    border: 1px solid #2a2e38;
-    border-radius: 12px;
-    overflow: hidden;
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
   }
-  .theory-toggle summary {
-    padding: 16px 24px;
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    border-right: 1px solid var(--border);
+  }
+
+  .toolbar-group:last-child { border-right: none; }
+
+  .toolbar-group label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+    white-space: nowrap;
+  }
+
+  button, .btn {
+    background: var(--surface-hover);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--accent);
-    list-style: none;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  button:hover { background: #2f3448; border-color: #3e4460; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover { background: var(--accent-hover); }
+
+  button.danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+  button.danger:hover { background: var(--danger-hover); }
+
+  button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .icon-btn {
+    padding: 7px 10px;
+    font-size: 16px;
+    min-width: 34px;
+    justify-content: center;
+  }
+
+  /* Slider controls */
+  .slider-control {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .theory-toggle summary::before {
-    content: '▸';
-    transition: transform 0.2s;
-  }
-  .theory-toggle[open] summary::before {
-    transform: rotate(90deg);
-  }
-  .theory-content {
-    padding: 0 24px 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  @media (max-width: 700px) {
-    .theory-content { grid-template-columns: 1fr; }
-  }
-  .theory-card {
-    border-radius: 10px;
-    padding: 20px;
-    border: 1px solid #2a2e38;
-  }
-  .theory-card.brand-theory {
-    background: linear-gradient(135deg, rgba(26,58,92,0.15), transparent);
-    border-color: rgba(26,58,92,0.4);
-  }
-  .theory-card.influencer-theory {
-    background: linear-gradient(135deg, rgba(194,77,44,0.15), transparent);
-    border-color: rgba(194,77,44,0.4);
-  }
-  .theory-card h3 {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-  }
-  .theory-card.brand-theory h3 { color: #5b9bd5; }
-  .theory-card.influencer-theory h3 { color: #e07850; }
-  .theory-card p {
-    font-size: 0.82rem;
-    line-height: 1.65;
-    color: var(--muted);
-  }
-  .theory-card .trait {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    margin: 4px 4px 0 0;
-  }
-  .brand-theory .trait {
-    background: rgba(26,58,92,0.3);
-    color: #5b9bd5;
-  }
-  .influencer-theory .trait {
-    background: rgba(194,77,44,0.3);
-    color: #e07850;
+
+  .slider-control input[type="range"] {
+    width: 90px;
+    accent-color: var(--accent);
+    cursor: pointer;
   }
 
-  .theory-summary {
-    grid-column: 1 / -1;
+  .slider-value {
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 32px;
     text-align: center;
-    padding: 16px;
-    background: rgba(59,130,246,0.06);
-    border: 1px solid rgba(59,130,246,0.2);
-    border-radius: 10px;
-  }
-  .theory-summary p {
-    font-size: 0.82rem;
-    color: var(--muted);
-    line-height: 1.6;
-    max-width: 700px;
-    margin: 0 auto;
-  }
-  .theory-summary strong { color: var(--text); }
-
-  /* ── SPECTRUM / SLIDER AREA ── */
-  .spectrum-section {
-    max-width: 1100px;
-    margin: 24px auto 0;
-    padding: 0 24px;
+    font-weight: 600;
+    background: rgba(108, 92, 231, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
   }
 
-  .spectrum-labels {
+  /* Main canvas area */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+
+  .canvas-container {
+    position: relative;
+    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 2px solid var(--border);
+    cursor: crosshair;
+    max-width: 95vw;
+    max-height: calc(100vh - 140px);
+  }
+
+  .canvas-container canvas {
+    display: block;
+    max-width: 95vw;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
+  }
+
+  #heatCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Upload overlay */
+  .upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 600px;
+    max-width: 90vw;
+    height: 400px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--accent);
+    background: rgba(108, 92, 231, 0.05);
+  }
+
+  .upload-area .upload-icon {
+    font-size: 56px;
+    opacity: 0.5;
+  }
+
+  .upload-area h2 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .upload-area p {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .upload-area .formats {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface-hover);
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  #fileInput { display: none; }
+
+  /* Brush preview */
+  .brush-preview {
+    position: fixed;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 100, 100, 0.6);
+    pointer-events: none;
+    z-index: 1000;
+    transform: translate(-50%, -50%);
+    display: none;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 20px;
+    font-size: 12px;
+    color: var(--text-muted);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 0 4px;
-  }
-  .spectrum-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
-  .spectrum-label.brand { color: #5b9bd5; }
-  .spectrum-label.influencer { color: #e07850; }
-  .spectrum-label.center { color: var(--muted); font-weight: 400; font-size: 0.7rem; }
-
-  /* Slider track */
-  .slider-container {
-    position: relative;
-    height: 6px;
-    background: linear-gradient(90deg, var(--brand-color), #444, var(--influencer-color));
-    border-radius: 3px;
-    margin-bottom: 24px;
-  }
-  .slider-container input[type=range] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 30px;
-    background: transparent;
-    position: absolute;
-    top: -12px;
-    left: 0;
-    cursor: pointer;
-  }
-  .slider-container input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    border: 3px solid var(--accent);
-  }
-  .slider-container input[type=range]::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    border: 3px solid var(--accent);
-  }
-
-  /* ── MEDIA GALLERY ── */
-  .gallery-wrapper {
-    position: relative;
-    overflow: hidden;
-    min-height: 300px;
-    margin-bottom: 32px;
-  }
-  .media-gallery {
-    display: flex;
     gap: 16px;
-    padding: 8px 0;
-    transition: transform 0.4s ease;
   }
-  .media-card {
-    flex: 0 0 220px;
-    background: var(--card-bg);
-    border: 1px solid #2a2e38;
-    border-radius: 12px;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-    transition: opacity 0.5s, transform 0.5s;
+
+  .status-bar .hint {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-bar kbd {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-family: inherit;
+  }
+
+  /* Dropdown menu */
+  .dropdown {
     position: relative;
   }
-  .media-card.visible {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  .media-card.highlighted {
-    border-color: var(--accent);
-    box-shadow: 0 0 20px rgba(59,130,246,0.2);
-  }
-  .media-card .media-container {
-    width: 100%;
-    height: 160px;
-    overflow: hidden;
-    background: #111;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .media-card img,
-  .media-card video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .media-card .card-info {
-    padding: 12px;
-  }
-  .media-card .card-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .media-card .card-desc {
-    font-size: 0.75rem;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-  .media-card .position-dot {
+
+  .dropdown-menu {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-  }
-
-  /* Amplifiers */
-  .amplifiers-badge {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 12px 12px;
-  }
-  .amplifier-tag {
-    font-size: 0.6rem;
-    padding: 2px 7px;
-    border-radius: 10px;
-    background: rgba(59,130,246,0.12);
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--muted);
-  }
-  .empty-state h3 {
-    font-size: 1.1rem;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
-  .empty-state p {
-    font-size: 0.82rem;
-    line-height: 1.6;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-  .empty-state code {
-    background: rgba(59,130,246,0.1);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.78rem;
-    color: var(--accent);
-  }
-
-  /* ── AMPLIFIERS SECTION ── */
-  .amplifiers-section {
-    max-width: 1100px;
-    margin: 0 auto 48px;
-    padding: 0 24px;
-  }
-  .amplifiers-section h2 {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--text);
-  }
-  .amplifiers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-  }
-  .amplifier-card {
-    background: var(--card-bg);
-    border: 1px solid #2a2e38;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .amplifier-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-  }
-  .amplifier-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
-  .amplifier-card .amp-name {
-    font-size: 0.78rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .amplifier-card .amp-desc {
-    font-size: 0.68rem;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-
-  /* ── EFFECT VIZ ── */
-  .effect-viz {
-    max-width: 1100px;
-    margin: 0 auto 48px;
-    padding: 0 24px;
-  }
-  .effect-bars {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 16px;
-  }
-  @media (max-width: 600px) {
-    .effect-bars { grid-template-columns: 1fr; }
-  }
-  .effect-col h3 {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-  }
-  .effect-col.brand-col h3 { color: #5b9bd5; }
-  .effect-col.influencer-col h3 { color: #e07850; }
-  .effect-bar {
-    margin-bottom: 10px;
-  }
-  .effect-bar .bar-label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .effect-bar .bar-track {
-    height: 6px;
-    background: #1e222c;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .effect-bar .bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.8s ease;
-  }
-  .brand-col .bar-fill { background: linear-gradient(90deg, #1a3a5c, #5b9bd5); }
-  .influencer-col .bar-fill { background: linear-gradient(90deg, #c24d2c, #e07850); }
-
-  .effect-depth-label {
-    text-align: center;
-    margin-top: 16px;
-    padding: 12px;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
-  .brand-col .effect-depth-label {
-    background: rgba(26,58,92,0.15);
-    color: #5b9bd5;
-  }
-  .influencer-col .effect-depth-label {
-    background: rgba(194,77,44,0.15);
-    color: #e07850;
+    box-shadow: var(--shadow);
+    z-index: 200;
+    min-width: 160px;
+    padding: 4px;
+    display: none;
   }
 
-  /* ── CONFIG PANEL ── */
-  .config-panel {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 100;
-  }
-  .config-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--card-bg);
-    border: 1px solid #2a2e38;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.2s;
-  }
-  .config-btn:hover { border-color: var(--accent); color: var(--text); }
-  .config-dropdown {
-    display: none;
-    position: absolute;
-    top: 48px;
-    right: 0;
-    background: var(--card-bg);
-    border: 1px solid #2a2e38;
-    border-radius: 12px;
-    padding: 16px;
-    width: 280px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-  }
-  .config-dropdown.open { display: block; }
-  .config-dropdown h4 {
-    font-size: 0.78rem;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
-  .config-dropdown label {
-    display: block;
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .config-dropdown input,
-  .config-dropdown textarea {
+  .dropdown-menu.open { display: block; }
+
+  .dropdown-menu button {
     width: 100%;
-    padding: 6px 10px;
-    background: #12151c;
-    border: 1px solid #2a2e38;
-    border-radius: 6px;
-    color: var(--text);
-    font-size: 0.75rem;
-    font-family: inherit;
-    margin-bottom: 10px;
-  }
-  .config-dropdown textarea { min-height: 60px; resize: vertical; }
-  .config-dropdown button.add-btn {
-    width: 100%;
-    padding: 8px;
-    background: var(--accent);
-    color: #fff;
     border: none;
     border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
+    text-align: left;
+    padding: 8px 12px;
+    background: transparent;
   }
-  .config-dropdown button.add-btn:hover { opacity: 0.9; }
+
+  .dropdown-menu button:hover {
+    background: var(--surface-hover);
+  }
+
+  /* Opacity toggle */
+  .opacity-slider {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Toast notifications */
+  .toast {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    header { padding: 10px 12px; }
+    .toolbar-group label { display: none; }
+    .slider-control input[type="range"] { width: 60px; }
+  }
 </style>
 </head>
 <body>
 
-<!-- Config gear -->
-<div class="config-panel">
-  <button class="config-btn" onclick="toggleConfig()" title="Add media item">+</button>
-  <div class="config-dropdown" id="configDropdown">
-    <h4>Add Media to Spectrum</h4>
-    <label>Media file (from /media folder)</label>
-    <input type="text" id="cfgFile" placeholder="e.g. 03-nike-runner.mp4">
-    <label>Label</label>
-    <input type="text" id="cfgLabel" placeholder="e.g. Nike Brand Spot">
-    <label>Description</label>
-    <input type="text" id="cfgDesc" placeholder="e.g. High production brand ad">
-    <label>Position (0 = pure brand, 100 = pure influencer)</label>
-    <input type="number" id="cfgPos" min="0" max="100" value="50">
-    <label>Amplifiers (comma-separated)</label>
-    <input type="text" id="cfgAmps" placeholder="e.g. comedy, relevance">
-    <button class="add-btn" onclick="addMediaItem()">Add to Spectrum</button>
+<header>
+  <div class="logo">
+    <div class="logo-icon">&#x1F525;</div>
+    Heatmap Studio
   </div>
-</div>
 
-<!-- Header -->
-<div class="header">
-  <h1>Brand-Led vs Influencer-Led Advertising</h1>
-  <p>Exploring the spectrum between shallow-wide brand effects and narrow-deep influencer effects</p>
-</div>
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <!-- Undo / Redo -->
+    <div class="toolbar-group">
+      <button class="icon-btn" id="undoBtn" title="Undo (Ctrl+Z)" disabled>&#x21A9;</button>
+      <button class="icon-btn" id="redoBtn" title="Redo (Ctrl+Y)" disabled>&#x21AA;</button>
+    </div>
 
-<!-- Theory -->
-<div class="theory-section">
-  <details class="theory-toggle" open>
-    <summary>The Theory: Attention vs Attribution</summary>
-    <div class="theory-content">
-      <div class="theory-card brand-theory">
-        <h3>Brand-Led Advertising</h3>
-        <p>Higher production quality with obvious brand cues and assets. People recognise these as adverts quickly, reducing raw attention time. However, the strong brand signals mean those who do engage can easily attribute the ad back to the brand &mdash; driving higher recall, consideration, and purchase intent across a broad audience.</p>
-        <div style="margin-top: 10px;">
-          <span class="trait">Shallow but wide effects</span>
-          <span class="trait">High recall</span>
-          <span class="trait">Strong brand cues</span>
-          <span class="trait">Higher production</span>
-          <span class="trait">Broad reach</span>
+    <!-- Brush Size -->
+    <div class="toolbar-group">
+      <label>Brush</label>
+      <div class="slider-control">
+        <input type="range" id="brushSize" min="10" max="200" value="60">
+        <span class="slider-value" id="brushSizeVal">60</span>
+      </div>
+    </div>
+
+    <!-- Heat Intensity -->
+    <div class="toolbar-group">
+      <label>Intensity</label>
+      <div class="slider-control">
+        <input type="range" id="intensity" min="1" max="20" value="5">
+        <span class="slider-value" id="intensityVal">5</span>
+      </div>
+    </div>
+
+    <!-- Heatmap Opacity -->
+    <div class="toolbar-group">
+      <label>Opacity</label>
+      <div class="slider-control">
+        <input type="range" id="heatOpacity" min="0" max="100" value="70">
+        <span class="slider-value" id="heatOpacityVal">70%</span>
+      </div>
+    </div>
+
+    <!-- Toggle original -->
+    <div class="toolbar-group">
+      <button id="toggleOriginal" title="Hold to view original image">
+        &#x1F441; Original
+      </button>
+    </div>
+
+    <!-- Clear heatmap -->
+    <div class="toolbar-group">
+      <button id="clearBtn" class="danger" title="Clear all heatmap data">
+        &#x1F5D1; Clear
+      </button>
+    </div>
+
+    <!-- Download -->
+    <div class="toolbar-group">
+      <div class="dropdown">
+        <button id="downloadBtn" class="primary">
+          &#x2B07; Download &#x25BE;
+        </button>
+        <div class="dropdown-menu" id="downloadMenu">
+          <button data-format="png">PNG (lossless)</button>
+          <button data-format="jpeg">JPEG (compressed)</button>
+          <button data-format="webp">WebP (modern)</button>
+          <button data-format="bmp">BMP (uncompressed)</button>
+          <button data-format="heatonly">Heatmap Only (PNG)</button>
         </div>
       </div>
-      <div class="theory-card influencer-theory">
-        <h3>Influencer-Led Advertising</h3>
-        <p>Often lower production quality, blending into organic content. People watch longer because it doesn't immediately register as an ad, generating strong attention metrics. But the lack of brand assets means fewer viewers connect the content back to the brand &mdash; creating deep engagement for a minority but weaker overall brand outcomes.</p>
-        <div style="margin-top: 10px;">
-          <span class="trait">Narrow but deep effects</span>
-          <span class="trait">High attention</span>
-          <span class="trait">Low brand cues</span>
-          <span class="trait">Organic feel</span>
-          <span class="trait">Niche impact</span>
-        </div>
-      </div>
-      <div class="theory-summary">
-        <p><strong>The trade-off:</strong> Brand ads sacrifice attention for attribution. Influencer ads sacrifice attribution for attention. The slider below maps real examples across this spectrum. Even within each type, <strong>amplifiers</strong> like comedy, context, and relevance can boost effectiveness — these are independent levers that enhance either approach.</p>
-      </div>
     </div>
-  </details>
+
+    <!-- Change image -->
+    <div class="toolbar-group">
+      <button id="changeImageBtn" title="Upload a different image">
+        &#x1F4C2; Change Image
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Upload area -->
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">&#x1F5BC;</div>
+    <h2>Upload an Image</h2>
+    <p>Drag & drop or click to select</p>
+    <div class="formats">PNG, JPEG, WebP, BMP, GIF, SVG, TIFF</div>
+  </div>
+
+  <!-- Canvas workspace -->
+  <div class="canvas-container" id="canvasContainer" style="display:none;">
+    <canvas id="imageCanvas"></canvas>
+    <canvas id="heatCanvas"></canvas>
+  </div>
+</main>
+
+<div class="status-bar" id="statusBar" style="display:none;">
+  <div class="hint">
+    <span><kbd>Click + Drag</kbd> Paint heat</span>
+    <span><kbd>[ / ]</kbd> Brush size</span>
+    <span><kbd>Ctrl+Z</kbd> Undo</span>
+    <span><kbd>Ctrl+Y</kbd> Redo</span>
+    <span><kbd>Space</kbd> View original</span>
+  </div>
+  <span id="coordsDisplay">--</span>
 </div>
 
-<!-- Spectrum slider -->
-<div class="spectrum-section">
-  <div class="spectrum-labels">
-    <span class="spectrum-label brand">Brand-Led</span>
-    <span class="spectrum-label center">Hybrid</span>
-    <span class="spectrum-label influencer">Influencer-Led</span>
-  </div>
-  <div class="slider-container">
-    <input type="range" id="spectrumSlider" min="0" max="100" value="50">
-  </div>
-</div>
+<div class="brush-preview" id="brushPreview"></div>
+<div class="toast" id="toast"></div>
 
-<!-- Media gallery -->
-<div class="spectrum-section">
-  <div class="gallery-wrapper">
-    <div class="media-gallery" id="mediaGallery">
-      <!-- Cards inserted by JS -->
-    </div>
-    <div class="empty-state" id="emptyState">
-      <h3>Add your ad examples</h3>
-      <p>
-        Drop images or videos into the <code>/media</code> folder with numbered filenames to set their order (e.g. <code>01-brand-spot.jpg</code>, <code>02-influencer-ad.mp4</code>).
-        Then use the <strong>+</strong> button to register them on the spectrum, or edit the <code>mediaItems</code> array in the HTML.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- Effect visualisation -->
-<div class="effect-viz">
-  <h2 style="font-size:1rem; font-weight:700; margin-bottom:4px;">Effect Profile at Current Position</h2>
-  <p style="font-size:0.75rem; color:var(--muted); margin-bottom:16px;">How outcomes shift across the brand–influencer spectrum</p>
-  <div class="effect-bars">
-    <div class="effect-col brand-col">
-      <h3>Brand-Led Outcomes</h3>
-      <div class="effect-bar"><div class="bar-label">Attention / Dwell Time</div><div class="bar-track"><div class="bar-fill" id="brandAttention" style="width:35%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Ad Recall</div><div class="bar-track"><div class="bar-fill" id="brandRecall" style="width:80%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Brand Consideration</div><div class="bar-track"><div class="bar-fill" id="brandConsideration" style="width:75%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Purchase Intent</div><div class="bar-track"><div class="bar-fill" id="brandPurchase" style="width:65%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Breadth of Effect</div><div class="bar-track"><div class="bar-fill" id="brandBreadth" style="width:85%"></div></div></div>
-      <div class="effect-depth-label">Shallow &amp; Wide</div>
-    </div>
-    <div class="effect-col influencer-col">
-      <h3>Influencer-Led Outcomes</h3>
-      <div class="effect-bar"><div class="bar-label">Attention / Dwell Time</div><div class="bar-track"><div class="bar-fill" id="infAttention" style="width:85%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Ad Recall</div><div class="bar-track"><div class="bar-fill" id="infRecall" style="width:35%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Brand Consideration</div><div class="bar-track"><div class="bar-fill" id="infConsideration" style="width:30%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Purchase Intent</div><div class="bar-track"><div class="bar-fill" id="infPurchase" style="width:55%"></div></div></div>
-      <div class="effect-bar"><div class="bar-label">Depth of Engagement</div><div class="bar-track"><div class="bar-fill" id="infDepth" style="width:80%"></div></div></div>
-      <div class="effect-depth-label">Narrow &amp; Deep</div>
-    </div>
-  </div>
-</div>
-
-<!-- Amplifiers -->
-<div class="amplifiers-section">
-  <h2>Amplifiers &mdash; Independent Effectiveness Levers</h2>
-  <p style="font-size:0.78rem; color:var(--muted); margin-bottom:16px;">Regardless of where an ad sits on the spectrum, these factors can independently boost its effectiveness.</p>
-  <div class="amplifiers-grid">
-    <div class="amplifier-card"><div class="icon">&#9786;</div><div class="amp-name">Comedy</div><div class="amp-desc">Humour increases attention and sharing regardless of format</div></div>
-    <div class="amplifier-card"><div class="icon">&#9881;</div><div class="amp-name">Context</div><div class="amp-desc">Placement in the right environment at the right moment</div></div>
-    <div class="amplifier-card"><div class="icon">&#9733;</div><div class="amp-name">Relevance</div><div class="amp-desc">Personal relevance to the viewer's needs or interests</div></div>
-    <div class="amplifier-card"><div class="icon">&#9829;</div><div class="amp-name">Emotion</div><div class="amp-desc">Emotional resonance deepens engagement and memory</div></div>
-    <div class="amplifier-card"><div class="icon">&#9775;</div><div class="amp-name">Novelty</div><div class="amp-desc">Unexpected or fresh creative cuts through habituation</div></div>
-    <div class="amplifier-card"><div class="icon">&#9992;</div><div class="amp-name">Frequency</div><div class="amp-desc">Repeated exposure reinforces memory structures over time</div></div>
-  </div>
-</div>
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif,image/svg+xml,image/tiff">
 
 <script>
-  // ═══════════════════════════════════════════════════════
-  //  MEDIA ITEMS CONFIG
-  //  Add your ads here. Position: 0 = brand, 100 = influencer
-  //  Number in filename determines left-to-right order.
-  //  Supported: .jpg .jpeg .png .gif .webp .mp4 .webm .mov
-  // ═══════════════════════════════════════════════════════
-  let mediaItems = [
-    // EXAMPLE entries — replace/extend with your own:
-    // {
-    //   file: "media/01-coca-cola-christmas.jpg",
-    //   label: "Coca-Cola Christmas",
-    //   desc: "Classic high-production brand campaign",
-    //   position: 5,          // 0-100 (brand to influencer)
-    //   amplifiers: ["emotion", "frequency"]
-    // },
-    // {
-    //   file: "media/02-nike-just-do-it.mp4",
-    //   label: "Nike — Just Do It",
-    //   desc: "Brand-heavy with celebrity endorsement",
-    //   position: 20,
-    //   amplifiers: ["emotion", "relevance"]
-    // },
-    // {
-    //   file: "media/05-tiktoker-unboxing.mp4",
-    //   label: "TikTok Unboxing",
-    //   desc: "Pure influencer content, minimal brand cues",
-    //   position: 90,
-    //   amplifiers: ["novelty"]
-    // },
-  ];
+(() => {
+  // DOM refs
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  const canvasContainer = document.getElementById('canvasContainer');
+  const imageCanvas = document.getElementById('imageCanvas');
+  const heatCanvas = document.getElementById('heatCanvas');
+  const imgCtx = imageCanvas.getContext('2d');
+  const heatCtx = heatCanvas.getContext('2d');
+  const toolbar = document.getElementById('toolbar');
+  const statusBar = document.getElementById('statusBar');
+  const brushPreview = document.getElementById('brushPreview');
+  const coordsDisplay = document.getElementById('coordsDisplay');
+  const toast = document.getElementById('toast');
 
-  // Sort by position (left-to-right = brand-to-influencer)
-  function sortMedia() {
-    mediaItems.sort((a, b) => a.position - b.position);
+  // Controls
+  const brushSizeSlider = document.getElementById('brushSize');
+  const brushSizeVal = document.getElementById('brushSizeVal');
+  const intensitySlider = document.getElementById('intensity');
+  const intensityVal = document.getElementById('intensityVal');
+  const heatOpacitySlider = document.getElementById('heatOpacity');
+  const heatOpacityVal = document.getElementById('heatOpacityVal');
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  const toggleOriginal = document.getElementById('toggleOriginal');
+  const clearBtn = document.getElementById('clearBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadMenu = document.getElementById('downloadMenu');
+  const changeImageBtn = document.getElementById('changeImageBtn');
+
+  // State
+  let baseImage = null;
+  let painting = false;
+  let heatData = null; // Float32Array of accumulated heat values
+  let imgWidth = 0;
+  let imgHeight = 0;
+  let displayScale = 1;
+  let undoStack = [];
+  let redoStack = [];
+  const MAX_UNDO = 30;
+  let showingOriginal = false;
+  let paintInterval = null;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+
+  // Show toast
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
   }
 
-  // ── Render gallery ──
-  function renderGallery() {
-    const gallery = document.getElementById('mediaGallery');
-    const empty = document.getElementById('emptyState');
-    gallery.innerHTML = '';
+  // Upload handling
+  uploadArea.addEventListener('click', () => fileInput.click());
+  changeImageBtn.addEventListener('click', () => fileInput.click());
 
-    if (mediaItems.length === 0) {
-      empty.style.display = 'block';
-      return;
-    }
-    empty.style.display = 'none';
-
-    sortMedia();
-    mediaItems.forEach((item, i) => {
-      const card = document.createElement('div');
-      card.className = 'media-card';
-      card.dataset.position = item.position;
-      card.style.transitionDelay = `${i * 0.08}s`;
-
-      const isVideo = /\.(mp4|webm|mov)$/i.test(item.file);
-      const dotColor = positionColor(item.position);
-
-      card.innerHTML = `
-        <div class="position-dot" style="background:${dotColor}"></div>
-        <div class="media-container">
-          ${isVideo
-            ? `<video src="${item.file}" muted loop playsinline preload="metadata"></video>`
-            : `<img src="${item.file}" alt="${item.label}" loading="lazy">`}
-        </div>
-        <div class="card-info">
-          <div class="card-label" style="color:${dotColor}">${item.label}</div>
-          <div class="card-desc">${item.desc}</div>
-        </div>
-        ${item.amplifiers && item.amplifiers.length
-          ? `<div class="amplifiers-badge">${item.amplifiers.map(a => `<span class="amplifier-tag">${a}</span>`).join('')}</div>`
-          : ''}
-      `;
-      gallery.appendChild(card);
-
-      // Play video on hover
-      if (isVideo) {
-        const vid = card.querySelector('video');
-        card.addEventListener('mouseenter', () => vid.play());
-        card.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
-      }
-    });
-
-    updateVisibility();
-  }
-
-  function positionColor(pos) {
-    // Blend brand blue → neutral → influencer orange
-    const r = Math.round(26 + (194 - 26) * pos / 100);
-    const g = Math.round(58 + (77 - 58) * pos / 100);
-    const b = Math.round(92 + (44 - 92) * pos / 100);
-    return `rgb(${r},${g},${b})`;
-  }
-
-  // ── Slider controls visibility + effects ──
-  const slider = document.getElementById('spectrumSlider');
-  slider.addEventListener('input', () => {
-    updateVisibility();
-    updateEffectBars();
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) loadImage(e.dataTransfer.files[0]);
   });
 
-  function updateVisibility() {
-    const val = parseInt(slider.value);
-    const range = 30; // cards within ±30 of slider are visible
-    const cards = document.querySelectorAll('.media-card');
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) loadImage(fileInput.files[0]);
+    fileInput.value = '';
+  });
 
-    cards.forEach(card => {
-      const pos = parseInt(card.dataset.position);
-      const distance = Math.abs(pos - val);
-      if (distance <= range) {
-        card.classList.add('visible');
-        card.classList.toggle('highlighted', distance <= 8);
-      } else {
-        card.classList.remove('visible', 'highlighted');
+  function loadImage(file) {
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        baseImage = img;
+        initCanvas(img);
+        uploadArea.style.display = 'none';
+        canvasContainer.style.display = 'block';
+        toolbar.style.display = 'flex';
+        statusBar.style.display = 'flex';
+        showToast('Image loaded — start painting!');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function initCanvas(img) {
+    imgWidth = img.naturalWidth;
+    imgHeight = img.naturalHeight;
+
+    // Compute display size fitting viewport
+    const maxW = window.innerWidth * 0.92;
+    const maxH = window.innerHeight - 160;
+    displayScale = Math.min(1, maxW / imgWidth, maxH / imgHeight);
+
+    const dw = Math.round(imgWidth * displayScale);
+    const dh = Math.round(imgHeight * displayScale);
+
+    imageCanvas.width = imgWidth;
+    imageCanvas.height = imgHeight;
+    imageCanvas.style.width = dw + 'px';
+    imageCanvas.style.height = dh + 'px';
+
+    heatCanvas.width = imgWidth;
+    heatCanvas.height = imgHeight;
+    heatCanvas.style.width = dw + 'px';
+    heatCanvas.style.height = dh + 'px';
+
+    imgCtx.drawImage(img, 0, 0);
+
+    // Init heat data
+    heatData = new Float32Array(imgWidth * imgHeight);
+    undoStack = [];
+    redoStack = [];
+    updateUndoRedoButtons();
+    renderHeatmap();
+  }
+
+  // Convert mouse event to image coordinates
+  function toImageCoords(e) {
+    const rect = canvasContainer.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / displayScale;
+    const y = (e.clientY - rect.top) / displayScale;
+    return { x, y };
+  }
+
+  // Painting
+  canvasContainer.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    painting = true;
+    saveUndoState();
+    const pos = toImageCoords(e);
+    lastMouseX = pos.x;
+    lastMouseY = pos.y;
+    applyHeat(pos.x, pos.y);
+    renderHeatmap();
+
+    // Continuous painting while held
+    paintInterval = setInterval(() => {
+      if (painting) {
+        applyHeat(lastMouseX, lastMouseY);
+        renderHeatmap();
       }
+    }, 50);
+  });
+
+  canvasContainer.addEventListener('mousemove', (e) => {
+    const pos = toImageCoords(e);
+    lastMouseX = pos.x;
+    lastMouseY = pos.y;
+
+    coordsDisplay.textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+
+    if (painting) {
+      applyHeat(pos.x, pos.y);
+      renderHeatmap();
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (painting) {
+      painting = false;
+      clearInterval(paintInterval);
+      paintInterval = null;
+    }
+  });
+
+  // Brush preview follows cursor over canvas
+  canvasContainer.addEventListener('mouseenter', () => {
+    brushPreview.style.display = 'block';
+  });
+  canvasContainer.addEventListener('mouseleave', () => {
+    brushPreview.style.display = 'none';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    const bs = brushSizeSlider.value * displayScale;
+    brushPreview.style.width = bs + 'px';
+    brushPreview.style.height = bs + 'px';
+    brushPreview.style.left = e.clientX + 'px';
+    brushPreview.style.top = e.clientY + 'px';
+  });
+
+  // Apply heat in a circular region
+  function applyHeat(cx, cy) {
+    const radius = brushSizeSlider.value / 2;
+    const strength = intensitySlider.value / 100; // per-tick intensity
+    const r2 = radius * radius;
+
+    const x0 = Math.max(0, Math.floor(cx - radius));
+    const y0 = Math.max(0, Math.floor(cy - radius));
+    const x1 = Math.min(imgWidth - 1, Math.ceil(cx + radius));
+    const y1 = Math.min(imgHeight - 1, Math.ceil(cy + radius));
+
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 <= r2) {
+          // Gaussian-like falloff
+          const falloff = 1 - (dist2 / r2);
+          const gaussian = falloff * falloff;
+          const idx = y * imgWidth + x;
+          heatData[idx] = Math.min(1, heatData[idx] + strength * gaussian);
+        }
+      }
+    }
+  }
+
+  // Render heatmap to canvas
+  function renderHeatmap() {
+    const opacity = heatOpacitySlider.value / 100;
+    heatCtx.clearRect(0, 0, imgWidth, imgHeight);
+
+    if (showingOriginal || opacity === 0) return;
+
+    const imageData = heatCtx.createImageData(imgWidth, imgHeight);
+    const pixels = imageData.data;
+
+    for (let i = 0; i < heatData.length; i++) {
+      const val = heatData[i];
+      if (val <= 0.001) continue;
+
+      const [r, g, b] = heatColor(val);
+      const pi = i * 4;
+      pixels[pi] = r;
+      pixels[pi + 1] = g;
+      pixels[pi + 2] = b;
+      pixels[pi + 3] = Math.round(val * opacity * 255);
+    }
+
+    heatCtx.putImageData(imageData, 0, 0);
+  }
+
+  // Color gradient: transparent -> blue -> cyan -> green -> yellow -> red -> white
+  function heatColor(t) {
+    t = Math.max(0, Math.min(1, t));
+
+    if (t < 0.15) {
+      // blue
+      const s = t / 0.15;
+      return [0, 0, Math.round(80 + 175 * s)];
+    } else if (t < 0.35) {
+      // blue -> cyan
+      const s = (t - 0.15) / 0.2;
+      return [0, Math.round(255 * s), 255];
+    } else if (t < 0.5) {
+      // cyan -> green
+      const s = (t - 0.35) / 0.15;
+      return [0, 255, Math.round(255 * (1 - s))];
+    } else if (t < 0.7) {
+      // green -> yellow
+      const s = (t - 0.5) / 0.2;
+      return [Math.round(255 * s), 255, 0];
+    } else if (t < 0.9) {
+      // yellow -> red
+      const s = (t - 0.7) / 0.2;
+      return [255, Math.round(255 * (1 - s)), 0];
+    } else {
+      // red -> white
+      const s = (t - 0.9) / 0.1;
+      return [255, Math.round(255 * s), Math.round(255 * s)];
+    }
+  }
+
+  // Undo / Redo
+  function saveUndoState() {
+    undoStack.push(new Float32Array(heatData));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = [];
+    updateUndoRedoButtons();
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    redoStack.push(new Float32Array(heatData));
+    heatData = undoStack.pop();
+    renderHeatmap();
+    updateUndoRedoButtons();
+  }
+
+  function redo() {
+    if (redoStack.length === 0) return;
+    undoStack.push(new Float32Array(heatData));
+    heatData = redoStack.pop();
+    renderHeatmap();
+    updateUndoRedoButtons();
+  }
+
+  function updateUndoRedoButtons() {
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+  }
+
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (!baseImage) return;
+
+    if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+    if ((e.key === 'y' && (e.ctrlKey || e.metaKey)) || (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+    }
+    if (e.key === '[') {
+      brushSizeSlider.value = Math.max(10, Number(brushSizeSlider.value) - 10);
+      brushSizeVal.textContent = brushSizeSlider.value;
+    }
+    if (e.key === ']') {
+      brushSizeSlider.value = Math.min(200, Number(brushSizeSlider.value) + 10);
+      brushSizeVal.textContent = brushSizeSlider.value;
+    }
+    if (e.code === 'Space' && !showingOriginal) {
+      e.preventDefault();
+      showingOriginal = true;
+      heatCanvas.style.display = 'none';
+      toggleOriginal.classList.add('active');
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space' && showingOriginal) {
+      showingOriginal = false;
+      heatCanvas.style.display = 'block';
+      toggleOriginal.classList.remove('active');
+    }
+  });
+
+  // Slider updates
+  brushSizeSlider.addEventListener('input', () => {
+    brushSizeVal.textContent = brushSizeSlider.value;
+  });
+  intensitySlider.addEventListener('input', () => {
+    intensityVal.textContent = intensitySlider.value;
+  });
+  heatOpacitySlider.addEventListener('input', () => {
+    heatOpacityVal.textContent = heatOpacitySlider.value + '%';
+    renderHeatmap();
+  });
+
+  // Toggle original button (hold)
+  toggleOriginal.addEventListener('mousedown', () => {
+    showingOriginal = true;
+    heatCanvas.style.display = 'none';
+    toggleOriginal.classList.add('active');
+  });
+  toggleOriginal.addEventListener('mouseup', () => {
+    showingOriginal = false;
+    heatCanvas.style.display = 'block';
+    toggleOriginal.classList.remove('active');
+  });
+  toggleOriginal.addEventListener('mouseleave', () => {
+    if (showingOriginal) {
+      showingOriginal = false;
+      heatCanvas.style.display = 'block';
+      toggleOriginal.classList.remove('active');
+    }
+  });
+
+  // Clear
+  clearBtn.addEventListener('click', () => {
+    if (!heatData) return;
+    if (!heatData.some(v => v > 0)) return;
+    saveUndoState();
+    heatData.fill(0);
+    renderHeatmap();
+    showToast('Heatmap cleared');
+  });
+
+  // Download dropdown
+  downloadBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    downloadMenu.classList.toggle('open');
+  });
+
+  window.addEventListener('click', () => {
+    downloadMenu.classList.remove('open');
+  });
+
+  downloadMenu.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const format = btn.dataset.format;
+      downloadImage(format);
+      downloadMenu.classList.remove('open');
     });
+  });
 
-    // Scroll gallery to center on slider position
-    const gallery = document.getElementById('mediaGallery');
-    if (cards.length > 0) {
-      const pct = val / 100;
-      const maxScroll = gallery.scrollWidth - gallery.parentElement.clientWidth;
-      gallery.style.transform = `translateX(-${pct * maxScroll}px)`;
+  function downloadImage(format) {
+    if (!baseImage) return;
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = imgWidth;
+    exportCanvas.height = imgHeight;
+    const ctx = exportCanvas.getContext('2d');
+
+    if (format === 'heatonly') {
+      // Just the heatmap on transparent background
+      const imageData = ctx.createImageData(imgWidth, imgHeight);
+      const pixels = imageData.data;
+      const opacity = heatOpacitySlider.value / 100;
+      for (let i = 0; i < heatData.length; i++) {
+        const val = heatData[i];
+        if (val <= 0.001) continue;
+        const [r, g, b] = heatColor(val);
+        const pi = i * 4;
+        pixels[pi] = r;
+        pixels[pi + 1] = g;
+        pixels[pi + 2] = b;
+        pixels[pi + 3] = Math.round(val * opacity * 255);
+      }
+      ctx.putImageData(imageData, 0, 0);
+      doDownload(exportCanvas, 'heatmap-only', 'png');
+    } else {
+      // Composite: image + heatmap
+      ctx.drawImage(baseImage, 0, 0);
+
+      // Draw heatmap on top
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = imgWidth;
+      tempCanvas.height = imgHeight;
+      const tCtx = tempCanvas.getContext('2d');
+      const imageData = tCtx.createImageData(imgWidth, imgHeight);
+      const pixels = imageData.data;
+      const opacity = heatOpacitySlider.value / 100;
+      for (let i = 0; i < heatData.length; i++) {
+        const val = heatData[i];
+        if (val <= 0.001) continue;
+        const [r, g, b] = heatColor(val);
+        const pi = i * 4;
+        pixels[pi] = r;
+        pixels[pi + 1] = g;
+        pixels[pi + 2] = b;
+        pixels[pi + 3] = Math.round(val * opacity * 255);
+      }
+      tCtx.putImageData(imageData, 0, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
+
+      doDownload(exportCanvas, 'heatmap', format);
     }
   }
 
-  function updateEffectBars() {
-    const v = parseInt(slider.value);
-    const brand = 1 - v / 100;  // 1 at left, 0 at right
-    const inf = v / 100;         // 0 at left, 1 at right
-
-    // Brand outcomes
-    document.getElementById('brandAttention').style.width = `${25 + brand * 20}%`;
-    document.getElementById('brandRecall').style.width = `${30 + brand * 55}%`;
-    document.getElementById('brandConsideration').style.width = `${25 + brand * 55}%`;
-    document.getElementById('brandPurchase').style.width = `${25 + brand * 45}%`;
-    document.getElementById('brandBreadth').style.width = `${30 + brand * 55}%`;
-
-    // Influencer outcomes
-    document.getElementById('infAttention').style.width = `${30 + inf * 55}%`;
-    document.getElementById('infRecall').style.width = `${20 + inf * 25}%`;
-    document.getElementById('infConsideration').style.width = `${15 + inf * 25}%`;
-    document.getElementById('infPurchase').style.width = `${25 + inf * 40}%`;
-    document.getElementById('infDepth').style.width = `${25 + inf * 55}%`;
-  }
-
-  // ── Config panel ──
-  function toggleConfig() {
-    document.getElementById('configDropdown').classList.toggle('open');
-  }
-
-  function addMediaItem() {
-    const file = document.getElementById('cfgFile').value.trim();
-    const label = document.getElementById('cfgLabel').value.trim();
-    const desc = document.getElementById('cfgDesc').value.trim();
-    const pos = parseInt(document.getElementById('cfgPos').value) || 50;
-    const amps = document.getElementById('cfgAmps').value.split(',').map(s => s.trim()).filter(Boolean);
-
-    if (!file) return;
-
-    const path = file.startsWith('media/') ? file : `media/${file}`;
-    mediaItems.push({ file: path, label: label || file, desc: desc || '', position: pos, amplifiers: amps });
-
-    // Save to localStorage
-    localStorage.setItem('adSpectrumMedia', JSON.stringify(mediaItems));
-
-    // Reset form
-    document.getElementById('cfgFile').value = '';
-    document.getElementById('cfgLabel').value = '';
-    document.getElementById('cfgDesc').value = '';
-    document.getElementById('cfgPos').value = 50;
-    document.getElementById('cfgAmps').value = '';
-
-    renderGallery();
-    toggleConfig();
-  }
-
-  // ── Init ──
-  (function init() {
-    // Load saved items from localStorage
-    const saved = localStorage.getItem('adSpectrumMedia');
-    if (saved) {
-      try { mediaItems = JSON.parse(saved); } catch(e) {}
+  function doDownload(canvas, name, format) {
+    let mimeType, ext;
+    switch (format) {
+      case 'jpeg':
+        mimeType = 'image/jpeg'; ext = 'jpg'; break;
+      case 'webp':
+        mimeType = 'image/webp'; ext = 'webp'; break;
+      case 'bmp':
+        mimeType = 'image/bmp'; ext = 'bmp'; break;
+      default:
+        mimeType = 'image/png'; ext = 'png';
     }
-    renderGallery();
-    updateEffectBars();
-  })();
+
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        showToast('Export failed — format may not be supported');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Downloaded as ${ext.toUpperCase()}`);
+    }, mimeType, 0.92);
+  }
+
+  // Window resize
+  window.addEventListener('resize', () => {
+    if (baseImage) {
+      const maxW = window.innerWidth * 0.92;
+      const maxH = window.innerHeight - 160;
+      displayScale = Math.min(1, maxW / imgWidth, maxH / imgHeight);
+
+      const dw = Math.round(imgWidth * displayScale);
+      const dh = Math.round(imgHeight * displayScale);
+
+      imageCanvas.style.width = dw + 'px';
+      imageCanvas.style.height = dh + 'px';
+      heatCanvas.style.width = dw + 'px';
+      heatCanvas.style.height = dh + 'px';
+    }
+  });
+
+  // Prevent context menu on canvas
+  canvasContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+})();
 </script>
-
 </body>
 </html>
