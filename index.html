@@ -398,6 +398,13 @@
       </div>
     </div>
 
+    <!-- Brush Mode -->
+    <div class="toolbar-group">
+      <label>Mode</label>
+      <button id="modePrecise" class="active" title="Precise brush for detailed work">Precise</button>
+      <button id="modeBroad" title="Broad soft brush for large regions">Broad</button>
+    </div>
+
     <!-- Toggle original -->
     <div class="toolbar-group">
       <button id="toggleOriginal" title="Hold to view original image">
@@ -499,8 +506,11 @@
   const downloadBtn = document.getElementById('downloadBtn');
   const downloadMenu = document.getElementById('downloadMenu');
   const changeImageBtn = document.getElementById('changeImageBtn');
+  const modePrecise = document.getElementById('modePrecise');
+  const modeBroad = document.getElementById('modeBroad');
 
   // State
+  let brushMode = 'precise'; // 'precise' or 'broad'
   let baseImage = null;
   let painting = false;
   let heatData = null; // Float32Array of accumulated heat values
@@ -656,7 +666,8 @@
   });
 
   window.addEventListener('mousemove', (e) => {
-    const bs = brushSizeSlider.value * displayScale;
+    const multiplier = brushMode === 'broad' ? 3 : 1;
+    const bs = brushSizeSlider.value * displayScale * multiplier;
     brushPreview.style.width = bs + 'px';
     brushPreview.style.height = bs + 'px';
     brushPreview.style.left = e.clientX + 'px';
@@ -665,26 +676,54 @@
 
   // Apply heat in a circular region
   function applyHeat(cx, cy) {
-    const radius = brushSizeSlider.value / 2;
-    const strength = intensitySlider.value / 100; // per-tick intensity
-    const r2 = radius * radius;
+    const baseRadius = brushSizeSlider.value / 2;
+    const strength = intensitySlider.value / 100;
 
-    const x0 = Math.max(0, Math.floor(cx - radius));
-    const y0 = Math.max(0, Math.floor(cy - radius));
-    const x1 = Math.min(imgWidth - 1, Math.ceil(cx + radius));
-    const y1 = Math.min(imgHeight - 1, Math.ceil(cy + radius));
+    if (brushMode === 'broad') {
+      // Broad mode: 3x radius, cubic falloff for very soft spread
+      const radius = baseRadius * 3;
+      const r2 = radius * radius;
+      const softStrength = strength * 0.4;
 
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
-        const dx = x - cx;
-        const dy = y - cy;
-        const dist2 = dx * dx + dy * dy;
-        if (dist2 <= r2) {
-          // Gaussian-like falloff
-          const falloff = 1 - (dist2 / r2);
-          const gaussian = falloff * falloff;
-          const idx = y * imgWidth + x;
-          heatData[idx] = Math.min(1, heatData[idx] + strength * gaussian);
+      const x0 = Math.max(0, Math.floor(cx - radius));
+      const y0 = Math.max(0, Math.floor(cy - radius));
+      const x1 = Math.min(imgWidth - 1, Math.ceil(cx + radius));
+      const y1 = Math.min(imgHeight - 1, Math.ceil(cy + radius));
+
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist2 = dx * dx + dy * dy;
+          if (dist2 <= r2) {
+            const falloff = 1 - (dist2 / r2);
+            const cubic = falloff * falloff * falloff;
+            const idx = y * imgWidth + x;
+            heatData[idx] = Math.min(1, heatData[idx] + softStrength * cubic);
+          }
+        }
+      }
+    } else {
+      // Precise mode: exact radius, quadratic falloff
+      const radius = baseRadius;
+      const r2 = radius * radius;
+
+      const x0 = Math.max(0, Math.floor(cx - radius));
+      const y0 = Math.max(0, Math.floor(cy - radius));
+      const x1 = Math.min(imgWidth - 1, Math.ceil(cx + radius));
+      const y1 = Math.min(imgHeight - 1, Math.ceil(cy + radius));
+
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist2 = dx * dx + dy * dy;
+          if (dist2 <= r2) {
+            const falloff = 1 - (dist2 / r2);
+            const gaussian = falloff * falloff;
+            const idx = y * imgWidth + x;
+            heatData[idx] = Math.min(1, heatData[idx] + strength * gaussian);
+          }
         }
       }
     }
@@ -715,34 +754,30 @@
     heatCtx.putImageData(imageData, 0, 0);
   }
 
-  // Color gradient: transparent -> blue -> cyan -> green -> yellow -> red -> white
+  // Color gradient: transparent -> blue -> cyan -> green -> yellow -> red (capped, no white)
   function heatColor(t) {
     t = Math.max(0, Math.min(1, t));
 
-    if (t < 0.15) {
+    if (t < 0.2) {
       // blue
-      const s = t / 0.15;
+      const s = t / 0.2;
       return [0, 0, Math.round(80 + 175 * s)];
-    } else if (t < 0.35) {
+    } else if (t < 0.4) {
       // blue -> cyan
-      const s = (t - 0.15) / 0.2;
+      const s = (t - 0.2) / 0.2;
       return [0, Math.round(255 * s), 255];
-    } else if (t < 0.5) {
+    } else if (t < 0.55) {
       // cyan -> green
-      const s = (t - 0.35) / 0.15;
+      const s = (t - 0.4) / 0.15;
       return [0, 255, Math.round(255 * (1 - s))];
-    } else if (t < 0.7) {
+    } else if (t < 0.75) {
       // green -> yellow
-      const s = (t - 0.5) / 0.2;
+      const s = (t - 0.55) / 0.2;
       return [Math.round(255 * s), 255, 0];
-    } else if (t < 0.9) {
-      // yellow -> red
-      const s = (t - 0.7) / 0.2;
-      return [255, Math.round(255 * (1 - s)), 0];
     } else {
-      // red -> white
-      const s = (t - 0.9) / 0.1;
-      return [255, Math.round(255 * s), Math.round(255 * s)];
+      // yellow -> red
+      const s = (t - 0.75) / 0.25;
+      return [255, Math.round(255 * (1 - s)), 0];
     }
   }
 
@@ -824,6 +859,18 @@
   heatOpacitySlider.addEventListener('input', () => {
     heatOpacityVal.textContent = heatOpacitySlider.value + '%';
     renderHeatmap();
+  });
+
+  // Brush mode toggle
+  modePrecise.addEventListener('click', () => {
+    brushMode = 'precise';
+    modePrecise.classList.add('active');
+    modeBroad.classList.remove('active');
+  });
+  modeBroad.addEventListener('click', () => {
+    brushMode = 'broad';
+    modeBroad.classList.add('active');
+    modePrecise.classList.remove('active');
   });
 
   // Toggle original button (hold)
